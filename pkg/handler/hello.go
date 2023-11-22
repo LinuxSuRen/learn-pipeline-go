@@ -2,11 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"github.com/devopsws/learn-pipeline-go/pkg/oauth"
-	"github.com/go-session/session"
 	"html"
 	"log"
 	"net/http"
+
+	"github.com/devopsws/learn-pipeline-go/pkg/oauth"
+	"github.com/go-session/session"
 )
 
 type HelloWorld struct {
@@ -21,10 +22,12 @@ func (h *HelloWorld) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var name string
-	if obj, ok := store.Get("userinfo"); ok {
-		fmt.Println(obj)
+	if obj, ok := store.Get("userinfo"); ok && obj != nil {
+		fmt.Println("user", obj)
 		userInfo := obj.(*oauth.UserInfo)
-		name = userInfo.PreferredUsername
+		if userInfo != nil {
+			name = userInfo.PreferredUsername
+		}
 	}
 
 	fmt.Fprintf(w, "Hello %s, %q\n", name, html.EscapeString(r.URL.Path))

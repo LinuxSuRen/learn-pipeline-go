@@ -21,14 +21,14 @@ import (
 )
 
 const (
-	authServerURL = "http://localhost:3000/login"
+	authServerURL = "https://github.com/login"
 )
 
 var (
 	config = oauth2.Config{
-		ClientID:     "c83c25cc-1bce-4183-b48c-2986293ae984",
-		ClientSecret: "gto_qptvlmn6or2dfgojdkyny7fqafi57cs7alrrgo7imic7khpthveq",
-		Scopes:       []string{"all"},
+		ClientID:     "91daa19893d9194e3fd9",
+		ClientSecret: "3f4f242430344f2c600534c006fda8ed5df71aa3",
+		Scopes:       []string{"all", "read_user_info"},
 		RedirectURL:  "http://localhost/oauth2/callback",
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  authServerURL + "/oauth/authorize",

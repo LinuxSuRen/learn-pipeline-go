@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/devopsws/learn-pipeline-go/pkg/oauth"
 	"github.com/go-session/session"
 	"golang.org/x/oauth2"
 )
@@ -65,39 +66,51 @@ func (a *Auth) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	outputHTML(w, r, "static/auth.html")
 }
 
+const (
+	authServerURL = "https://github.com/login"
+)
+
 func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) {
-	// r.ParseForm()
-	// state := r.Form.Get("state")
-	// if state != "xyz" {
-	// 	http.Error(w, "State invalid", http.StatusBadRequest)
-	// 	return
-	// }
-	// code := r.Form.Get("code")
-	// if code == "" {
-	// 	http.Error(w, "Code not found", http.StatusBadRequest)
-	// 	return
-	// }
-	// token, err := config.Exchange(r.Context(), code, oauth2.SetAuthURLParam("code_verifier", "s256example"))
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	r.ParseForm()
+	state := r.Form.Get("state")
+	if state != "xyz" {
+		http.Error(w, "State invalid", http.StatusBadRequest)
+		return
+	}
+	code := r.Form.Get("code")
+	if code == "" {
+		http.Error(w, "Code not found", http.StatusBadRequest)
+		return
+	}
+	token, err := a.config.Exchange(r.Context(), code, oauth2.SetAuthURLParam("code_verifier", "s256example"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("code", code)
 
-	// // get userInfo, save it to session
-	// if userInfo, err := oauth.GetUserInfo("authServerURL", token.AccessToken); err == nil {
-	// 	store, err := session.Start(r.Context(), w, r)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// 	store.Set("userinfo", userInfo)
-	// 	store.Save()
-	// }
+	// get userInfo, save it to session
+	if userInfo, err := oauth.GetUserInfo(authServerURL, token.AccessToken); err == nil {
+		fmt.Println(userInfo)
+		store, err := session.Start(r.Context(), w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		store.Set("userinfo", userInfo)
+		store.Save()
+	} else {
+		fmt.Println("failed to get userinfo", err)
+	}
 
-	// http.Redirect(w, r, a.homePage, http.StatusFound)
+	http.Redirect(w, r, a.homePage, http.StatusFound)
 }
 
 func (a *Auth) RequestCode(w http.ResponseWriter, r *http.Request) {
+	a.config.RedirectURL = fmt.Sprintf("https://%s/oauth2/callback", r.Host)
+	// a.config.Endpoint.AuthURL = fmt.Sprintf("https://%s/oauth/authorize", r.Host)
+	// a.config.Endpoint.TokenURL = fmt.Sprintf("https://%s/oauth/access_token", r.Host)
+
 	u := a.config.AuthCodeURL("xyz",
 		oauth2.SetAuthURLParam("code_challenge", `genCodeChallengeS256("s256example")`),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"))
